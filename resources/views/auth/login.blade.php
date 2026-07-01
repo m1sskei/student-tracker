@@ -8,12 +8,23 @@
                 </div>
             @endif
 
+            <!-- DITO ANG IDINAGDAG NATIN PARA SA ERROR -->
+            @if ($errors->any())
+                <div class="mb-4 p-3 bg-red-100 text-red-600 text-sm rounded border border-red-200">
+                    <ul class="list-disc list-inside">
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+
             <form method="POST" action="{{ route('login') }}">
                 @csrf
 
                 <div>
                     <label for="email" class="block font-medium text-sm text-gray-700">Email</label>
-                    <input id="email" class="block mt-1 w-full border-gray-300 focus:border-pink-500 focus:ring-pink-500 rounded-md shadow-sm" type="email" name="email" :value="old('email')" required autofocus autocomplete="username">
+                    <input id="email" class="block mt-1 w-full border-gray-300 focus:border-pink-500 focus:ring-pink-500 rounded-md shadow-sm" type="email" name="email" value="{{ old('email') }}" required autofocus autocomplete="username">
                 </div>
 
                 <div class="mt-4">
