@@ -4,6 +4,7 @@
             
             @php $user = auth()->user(); @endphp
 
+            {{-- Admin Stats --}}
             @if($user->name === 'Admin')
                 <div class="grid grid-cols-2 gap-4 mb-6">
                     <div class="bg-white p-6 rounded-lg shadow border-l-4 border-pink-500">
@@ -17,10 +18,11 @@
                 </div>
             @endif
 
+            {{-- Student Add Task Form --}}
             @if($user->name !== 'Admin')
                 <div class="bg-white p-6 rounded-lg shadow mb-6 border border-pink-100">
                     <h2 class="font-bold mb-4 text-pink-700">Add New Task</h2>
-                    <form action="/tasks" method="POST" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <form action="{{ route('tasks.store') }}" method="POST" class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         @csrf
                         <input type="text" name="title" placeholder="Title" class="border p-2 rounded focus:ring-pink-500" required>
                         <select name="priority" class="border p-2 rounded focus:ring-pink-500">
@@ -35,24 +37,42 @@
                 </div>
             @endif
 
+            {{-- Task List --}}
             <div class="bg-white p-6 rounded-lg shadow border-t-4 border-pink-500">
                 <h2 class="font-bold mb-4 text-pink-700">Task List</h2>
                 <table class="w-full text-left">
-                    <thead><tr class="border-b"><th class="p-2">Title</th>@if($user->name === 'Admin')<th class="p-2">Student</th>@endif<th class="p-2">Priority</th><th class="p-2">Due</th><th class="p-2">Action</th></tr></thead>
+                    <thead>
+                        <tr class="border-b">
+                            <th class="p-2">Title</th>
+                            @if($user->name === 'Admin')<th class="p-2">Student</th>@endif
+                            <th class="p-2">Priority</th>
+                            <th class="p-2">Due</th>
+                            <th class="p-2">Action</th>
+                        </tr>
+                    </thead>
                     <tbody>
                         @foreach($tasks as $task)
-                        <tr class="border-b">
-                            <td class="p-2">{{ $task->title }}</td>
+                        <tr class="border-b {{ $task->status === 'done' ? 'bg-gray-50' : '' }}">
+                            <td class="p-2 {{ $task->status === 'done' ? 'line-through text-gray-500' : '' }}">{{ $task->title }}</td>
                             @if($user->name === 'Admin') <td class="p-2 text-pink-600 font-semibold">{{ $task->user->name ?? 'N/A' }}</td> @endif
                             <td class="p-2">{{ $task->priority }}</td>
                             <td class="p-2">{{ $task->due_date }}</td>
-                            <td class="p-2 flex gap-2">
+                            <td class="p-2 flex gap-4">
+                                {{-- Status Toggle --}}
+                                <form action="{{ route('tasks.status', $task->id) }}" method="POST">
+                                    @csrf @method('PATCH')
+                                    <button class="text-sm font-bold {{ $task->status === 'done' ? 'text-green-600' : 'text-gray-400' }}">
+                                        {{ $task->status === 'done' ? '✓ Done' : 'Mark Done' }}
+                                    </button>
+                                </form>
+                                
                                 @if($user->name === 'Admin')
-                                    <a href="{{ route('tasks.edit', $task->id) }}" class="text-blue-500 underline">Edit</a>
+                                    <a href="{{ route('tasks.edit', $task->id) }}" class="text-blue-500 underline text-sm">Edit</a>
                                 @endif
-                                <form action="/tasks/{{ $task->id }}" method="POST">
+                                
+                                <form action="{{ route('tasks.destroy', $task->id) }}" method="POST">
                                     @csrf @method('DELETE')
-                                    <button class="text-red-500 underline">Delete</button>
+                                    <button class="text-red-500 underline text-sm">Delete</button>
                                 </form>
                             </td>
                         </tr>

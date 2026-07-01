@@ -10,7 +10,12 @@ class TaskController extends Controller
 {
     public function store(Request $request)
     {
-        $request->validate(['title' => 'required', 'priority' => 'required', 'due_date' => 'required']);
+        $request->validate([
+            'title' => 'required|string|max:255',
+            'priority' => 'required',
+            'due_date' => 'required|date'
+        ]);
+
         Task::create([
             'user_id' => Auth::id(),
             'title' => $request->title,
@@ -19,6 +24,7 @@ class TaskController extends Controller
             'priority' => $request->priority,
             'status' => 'pending',
         ]);
+
         return redirect()->route('dashboard');
     }
 
@@ -29,8 +35,21 @@ class TaskController extends Controller
 
     public function update(Request $request, Task $task)
     {
-        $request->validate(['title' => 'required', 'priority' => 'required', 'due_date' => 'required']);
+        $request->validate([
+            'title' => 'required|string|max:255',
+            'priority' => 'required',
+            'due_date' => 'required|date'
+        ]);
+
         $task->update($request->all());
+        return redirect()->route('dashboard');
+    }
+
+    public function updateStatus(Task $task)
+    {
+        $task->update([
+            'status' => $task->status === 'pending' ? 'done' : 'pending'
+        ]);
         return redirect()->route('dashboard');
     }
 
