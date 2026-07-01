@@ -4,6 +4,7 @@ namespace App\Livewire;
 
 use Livewire\Component;
 use App\Models\Task;
+use Illuminate\Support\Facades\Auth;
 
 class TaskManager extends Component
 {
@@ -12,14 +13,21 @@ class TaskManager extends Component
     protected $rules = [
         'title' => 'required|min:3',
         'description' => 'required',
-        'due_date' => 'required|date',
+        'due_date' => 'required|date_format:Y-m-d',
         'priority' => 'required',
     ];
 
     public function render()
     {
+        // Isinama natin ang 'with(user)' para makuha ang pangalan ng may-ari
+        $query = Task::with('user')->orderBy('is_completed', 'asc')->latest();
+
+        if (!Auth::user()->hasRole('admin')) {
+            $query->where('user_id', Auth::id());
+        }
+
         return view('livewire.task-manager', [
-            'tasks' => Task::orderBy('is_completed', 'asc')->latest()->get()
+            'tasks' => $query->get()
         ]);
     }
 
@@ -32,9 +40,10 @@ class TaskManager extends Component
 
     public function saveTask()
     {
-        $this->validate(); // Awtomatikong mag-eerror kung walang input
+        $this->validate();
         
         Task::updateOrCreate(['id' => $this->taskId], [
+            'user_id' => Auth::id(),
             'title' => $this->title,
             'description' => $this->description,
             'due_date' => $this->due_date,
@@ -47,6 +56,10 @@ class TaskManager extends Component
     public function editTask($id)
     {
         $task = Task::findOrFail($id);
+        
+        // Security: Bawal i-edit ng ibang student kung hindi sa kanila, pero pwede ang admin
+        if ($task->user_id !== Auth::id() && !Auth::user()->hasRole('admin')) { return; }
+        
         $this->taskId = $task->id;
         $this->title = $task->title;
         $this->description = $task->description;
@@ -55,10 +68,15 @@ class TaskManager extends Component
         $this->isEditMode = true;
     }
 
-    public function deleteTask($id) { Task::findOrFail($id)->delete(); }
+    public function deleteTask($id) { 
+        $task = Task::findOrFail($id);
+        if ($task->user_id === Auth::id() || Auth::user()->hasRole('admin')) { $task->delete(); }
+    }
 
     public function toggleComplete($id) {
         $task = Task::findOrFail($id);
-        $task->update(['is_completed' => !$task->is_completed]);
+        if ($task->user_id === Auth::id() || Auth::user()->hasRole('admin')) {
+            $task->update(['is_completed' => !$task->is_completed]);
+        }
     }
 }
