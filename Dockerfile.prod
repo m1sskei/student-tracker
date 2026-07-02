@@ -1,36 +1,23 @@
 FROM php:8.2-apache
 
-# Mag-install ng system dependencies at PHP extensions
+# I-install ang LAHAT ng posibleng kailangan ng Laravel
 RUN apt-get update && apt-get install -y \
-    libpng-dev \
-    libonig-dev \
-    libxml2-dev \
-    zip \
-    unzip \
-    git \
-    && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd
+    libpng-dev libonig-dev libxml2-dev libzip-dev \
+    zip unzip git curl \
+    && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip xml
 
-# I-enable ang Apache rewrite module
 RUN a2enmod rewrite
 
-# I-copy ang composer mula sa opisyal na image
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# I-set ang working directory
 WORKDIR /var/www/html
-
-# I-copy ang buong project files
 COPY . .
 
-# I-set ang tamang permissions
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
-
-# I-update ang Apache DocumentRoot
 RUN sed -i 's|/var/www/html|/var/www/html/public|g' /etc/apache2/sites-available/000-default.conf
 
-# I-install ang dependencies
-RUN composer install --no-dev --optimize-autoloader
+# I-disable ang --no-dev pansamantala para makita natin kung ano ang error
+RUN composer install --optimize-autoloader
 
 EXPOSE 80
-
 CMD ["apache2-foreground"]
