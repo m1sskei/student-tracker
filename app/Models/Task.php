@@ -4,8 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Spatie\Activitylog\Traits\LogsActivity; // CCTV 1
-use Spatie\Activitylog\LogOptions; // CCTV 2
+use Spatie\Activitylog\Traits\LogsActivity; 
+use Spatie\Activitylog\LogOptions;
 
 class Task extends Model
 {
