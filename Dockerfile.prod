@@ -1,32 +1,36 @@
 FROM php:8.2-apache
 
-# Mag-install ng dependencies
+# Mag-install ng system dependencies at PHP extensions
 RUN apt-get update && apt-get install -y \
     libpng-dev \
     libonig-dev \
     libxml2-dev \
     zip \
     unzip \
+    git \
     && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd
 
-# I-enable ang Apache rewrite module (kailangan ito para sa Laravel routes)
+# I-enable ang Apache rewrite module
 RUN a2enmod rewrite
 
-# I-copy ang code
-COPY . /var/www/html
+# I-copy ang composer mula sa opisyal na image
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# I-set ang permissions para sa Laravel
+# I-set ang working directory
+WORKDIR /var/www/html
+
+# I-copy ang buong project files
+COPY . .
+
+# I-set ang tamang permissions
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 
-# I-install ang composer
-COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
-RUN composer install --no-dev --optimize-autoloader
-
-# I-update ang Apache DocumentRoot para tumuro sa 'public' folder ng Laravel
+# I-update ang Apache DocumentRoot
 RUN sed -i 's|/var/www/html|/var/www/html/public|g' /etc/apache2/sites-available/000-default.conf
 
-# I-expose ang port 80 (standard para sa web)
+# I-install ang dependencies
+RUN composer install --no-dev --optimize-autoloader
+
 EXPOSE 80
 
-# Start Apache
 CMD ["apache2-foreground"]
